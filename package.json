@@ -1,0 +1,20 @@
+{
+  "name": "natural-at-channel",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@slack/bolt": "^4"
+  },
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun --watch index.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}
