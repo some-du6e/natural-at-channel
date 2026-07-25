@@ -10,7 +10,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@slack/bolt": "^4"
+    "@slack/bolt": "^4",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8"
   },
   "scripts": {
     "start": "bun run src/index.ts",

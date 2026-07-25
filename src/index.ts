@@ -1,5 +1,5 @@
-
-import { botApp } from "./slack_bot";
+import { botApp, oauthApp } from "./slack_bot"
 
 await botApp.start()
-console.log('bot is running!')
+await oauthApp.start(Number(process.env.PORT ?? 3000))
+console.log("bot is running!")
