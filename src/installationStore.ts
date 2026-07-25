@@ -87,3 +87,5 @@ export class SupabaseInstallationStore implements InstallationStore {
         if (error) throw error
     }
 }
+
+export const installationStore = new SupabaseInstallationStore()
