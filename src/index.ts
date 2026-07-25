@@ -1,5 +1,5 @@
 
-import { userApp } from "./slack_user";
+import { botApp } from "./slack_bot";
 
-await userApp.start()
-console.log('Selfbot is running!')
+await botApp.start()
+console.log('bot is running!')
