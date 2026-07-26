@@ -6,7 +6,10 @@ botApp.event("app_mention", async ({ event }) => {
     if (event.user === selfUserId) return
     if (!event.text.includes(`<@${selfUserId}>`)) return
 
+    console.log(event)
+
     const result = await repostAsChannelAndDelete(event.channel, event.ts, event.user)
+    console.log("repost result:", result)
     if (!result.ok && result.error === "no_token") {
         await sendAuthPrompt(event.channel, event.user, event.ts)
     } else if (!result.ok) {
