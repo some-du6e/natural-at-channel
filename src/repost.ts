@@ -98,11 +98,10 @@ export async function repostAsChannelAndDelete(
 
     const text = replaceSelfMention(originalText)
 
-    // Re-upload attachments to a private staging channel so the resulting
-    // file-share message doesn't clutter the main channel. The permalink_public
-    // we get back is externally renderable, so the image block on the main
-    // message can reference it.
-    const stagingChannel = process.env.FILE_STAGING_CHANNEL_ID
+    // Re-host attachments on the Hack Club CDN. The CDN pulls the bytes from
+    // Slack's url_private using our bot token (via X-Download-Authorization),
+    // and returns a public URL we can drop into an image block.
+    const cdnKey = process.env.HC_CDN_API_KEY
     type ImageBlock = {
         type: "image"
         image_url: string
@@ -110,68 +109,35 @@ export async function repostAsChannelAndDelete(
         title?: { type: "plain_text"; text: string }
     }
     const imageBlocks: ImageBlock[] = []
-    if (stagingChannel) {
+    if (cdnKey) {
         for (const file of original.files ?? []) {
             if (!file.url_private || !file.id) continue
             try {
-                const resp = await fetch(file.url_private, {
-                    headers: { Authorization: `Bearer ${process.env.BSLACK_TOKEN}` },
+                const resp = await fetch("https://cdn.hackclub.com/api/v4/upload_from_url", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${cdnKey}`,
+                        "Content-Type": "application/json",
+                        "X-Download-Authorization": `Bearer ${process.env.BSLACK_TOKEN}`,
+                    },
+                    body: JSON.stringify({ url: file.url_private }),
                 })
                 if (!resp.ok) {
-                    console.error(`failed to download ${file.id}: ${resp.status}`)
+                    console.error(
+                        `cdn upload failed for ${file.id}: ${resp.status} ${await resp.text()}`,
+                    )
                     continue
                 }
-                const buffer = await resp.arrayBuffer()
-                // Upload as the bot (not the user) so we don't require the
-                // user to be in the staging channel.
-                const uploaded = await botApp.client.files.uploadV2({
-                    file: Buffer.from(buffer),
-                    filename: file.name ?? file.id,
-                    title: file.title ?? file.name,
-                    channel_id: stagingChannel,
-                })
-                const newFile = (
-                    uploaded as {
-                        file?: {
-                            id?: string
-                            name?: string
-                            permalink_public?: string
-                        }
-                    }
-                ).file
-                if (!newFile?.id || !newFile.permalink_public) continue
-
-                // files.uploadV2 doesn't always return a working public URL —
-                // call files.sharedPublicURL to force-generate one, then
-                // rewrite it to the files-pri direct-bytes form Slack image
-                // blocks can render. See Hack Club CDN docs:
-                //   https://slack-files.com/T-F-PUBKEY
-                //   → https://files.slack.com/files-pri/T-F/FILENAME?pub_secret=PUBKEY
-                const shared = await botApp.client.files.sharedPublicURL({
-                    file: newFile.id,
-                })
-                const sharedFile = (shared as { file?: { permalink_public?: string } })
-                    .file
-                const pubUrl = sharedFile?.permalink_public ?? newFile.permalink_public
-                const m = pubUrl.match(/slack-files\.com\/([A-Z0-9]+)-([A-Z0-9]+)-([a-z0-9]+)/i)
-                if (!m) {
-                    console.error(`could not parse permalink_public: ${pubUrl}`)
-                    continue
-                }
-                const [, teamId, fileId, pubSecret] = m
-                const filename = encodeURIComponent(newFile.name ?? "image.png")
-                const directUrl = `https://files.slack.com/files-pri/${teamId}-${fileId}/${filename}?pub_secret=${pubSecret}`
-
+                const { url } = (await resp.json()) as { url?: string }
+                if (!url) continue
                 imageBlocks.push({
                     type: "image",
-                    image_url: directUrl,
-                    alt_text: newFile.name ?? "attachment",
-                    title: newFile.name
-                        ? { type: "plain_text", text: newFile.name }
-                        : undefined,
+                    image_url: url,
+                    alt_text: file.name ?? "attachment",
+                    title: file.name ? { type: "plain_text", text: file.name } : undefined,
                 })
             } catch (e) {
-                console.error(`failed to re-upload ${file.id}`, e)
+                console.error(`failed to re-host ${file.id}`, e)
             }
         }
     }
