@@ -1,6 +1,8 @@
 import { botApp, selfUserId } from "./slack_bot"
 import { repostAsChannelAndDelete, sendAuthPrompt } from "./repost"
 
+const UNAUTHORIZED_MESSAGE = "yeah buddy ur not channel manager nor channel creator byebye"
+
 botApp.event("app_mention", async ({ event }) => {
     if (!event.text || !event.user) return
     if (event.user === selfUserId) return
@@ -16,7 +18,9 @@ botApp.event("app_mention", async ({ event }) => {
         await botApp.client.chat.postEphemeral({
             channel: event.channel,
             user: event.user,
-            text: `Couldn't repost as @channel: ${result.error}`,
+            text: result.error === "unauthorized"
+                ? UNAUTHORIZED_MESSAGE
+                : `Couldn't repost as @channel: ${result.error}`,
         })
     }
 })
@@ -61,7 +65,9 @@ botApp.action("retry_repost", async ({ ack, body, respond }) => {
 
     await respond({
         response_type: "ephemeral",
-        text: `Couldn't repost as @channel: ${result.error}`,
+        text: result.error === "unauthorized"
+            ? UNAUTHORIZED_MESSAGE
+            : `Couldn't repost as @channel: ${result.error}`,
         replace_original: true,
     })
 })

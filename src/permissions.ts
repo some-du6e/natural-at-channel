@@ -55,7 +55,27 @@ export async function isUserAuthorized(slackId: string, channel: string, app: Ap
         }
     }
 
+    return false
+
 
 }
 
+function humiliateUser(channel: string, messageTs: string, app: App) {
+    return app.client.reactions.add({
+        "channel": channel,
+        "timestamp": messageTs,
+        "name": "loll"
+    })
+}
 
+export async function handleAuth(slackId: string, channel: string, app: App, messageTs: string) {
+    if (await isUserAuthorized(slackId, channel, app)) {
+        return true
+    }
+    try {
+        await humiliateUser(channel, messageTs, app)
+    } catch (e) {
+        console.error("failed to humiliate user", e)
+    }
+    return false    
+}

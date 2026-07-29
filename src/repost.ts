@@ -1,7 +1,7 @@
 import { botApp, selfUserId, teamId } from "./slack_bot"
 import { installationStore } from "./installationStore"
 import { deleteMessage } from "./usersManager"
-import { isUserAuthorized } from "./permissions"
+import { handleAuth } from "./permissions"
 
 
 function replaceSelfMention(message: string) {
@@ -76,9 +76,9 @@ export async function repostAsChannelAndDelete(
         return { ok: false, error: "no_token" }
     }
 
-    // let authorized = 
-    isUserAuthorized(userId, channelId, botApp)
     
+    const authed = await handleAuth(userId, channelId, botApp, messageTs)
+    if (!authed) return { ok: false, error: "unauthorized" }
 
 
 
