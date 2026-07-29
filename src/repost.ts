@@ -71,16 +71,13 @@ export async function repostAsChannelAndDelete(
     messageTs: string,
     userId: string,
 ): Promise<RepostResult> {
+    const authed = await handleAuth(userId, channelId, botApp, messageTs)
+    if (!authed) return { ok: false, error: "unauthorized" }
+
     const userToken = await getUserToken(userId)
     if (!userToken) {
         return { ok: false, error: "no_token" }
     }
-
-    
-    const authed = await handleAuth(userId, channelId, botApp, messageTs)
-    if (!authed) return { ok: false, error: "unauthorized" }
-
-
 
     // Refetch the original message so we have its text + author profile.
     const history = await botApp.client.conversations.history({
