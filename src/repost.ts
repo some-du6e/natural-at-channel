@@ -1,6 +1,8 @@
 import { botApp, selfUserId, teamId } from "./slack_bot"
 import { installationStore } from "./installationStore"
 import { deleteMessage } from "./usersManager"
+import { isUserAuthorized } from "./permissions"
+
 
 function replaceSelfMention(message: string) {
     return message.replaceAll(`<@${selfUserId}>`, "<!channel>")
@@ -38,7 +40,7 @@ export async function sendAuthPrompt(channelId: string, userId: string, messageT
                 type: "section",
                 text: {
                     type: "mrkdwn",
-                    text: "hi i need you to authorise <!channel>.",
+                    text: "hi i need you to authorise me so i can repost ur stuff with <!channel>.",
                 },
             },
             {
@@ -46,13 +48,13 @@ export async function sendAuthPrompt(channelId: string, userId: string, messageT
                 elements: [
                     {
                         type: "button",
-                        text: { type: "plain_text", text: "Authorize" },
+                        text: { type: "plain_text", text: "authorize" },
                         url: oauthUrl,
                         action_id: "oauth_authorize",
                     },
                     {
                         type: "button",
-                        text: { type: "plain_text", text: "I've authorized — retry" },
+                        text: { type: "plain_text", text: "yeah i alr did that dude" },
                         action_id: "retry_repost",
                         value: payload,
                     },
@@ -73,6 +75,12 @@ export async function repostAsChannelAndDelete(
     if (!userToken) {
         return { ok: false, error: "no_token" }
     }
+
+    // let authorized = 
+    isUserAuthorized(userId, channelId, botApp)
+    
+
+
 
     // Refetch the original message so we have its text + author profile.
     const history = await botApp.client.conversations.history({
