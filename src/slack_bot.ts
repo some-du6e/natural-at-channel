@@ -14,7 +14,7 @@ const teamId = auth.team_id
 if (!selfUserId) throw new Error("Could not determine the selfbot user ID")
 if (!teamId) throw new Error("Could not determine the team ID")
 
-registerHomeTab(botApp)
+registerHomeTab(botApp, teamId)
 
 console.log(`Selfbot connected as ${selfUserId} on team ${teamId}`)
 

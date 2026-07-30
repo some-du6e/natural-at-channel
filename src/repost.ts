@@ -71,7 +71,7 @@ export async function repostAsChannelAndDelete(
     messageTs: string,
     userId: string,
 ): Promise<RepostResult> {
-    const authed = await handleAuth(userId, channelId, botApp, messageTs)
+    const authed = await handleAuth(userId, channelId, botApp, messageTs, teamId!)
     if (!authed) return { ok: false, error: "unauthorized" }
 
     const userToken = await getUserToken(userId)

@@ -1,4 +1,5 @@
 import { App } from "@slack/bolt";
+import { getUserSettings, isSettingsTableMissing } from "./settings";
 
 async function getChannelManagers(channelId: string): Promise<string[]> { // src: https://github.com/skyfallwastaken/at-channel/blob/d7f003954e0486c1182f01ac383bad503a7481ac/src/util.ts#L48-L68
   const formData = new FormData();
@@ -68,14 +69,23 @@ function humiliateUser(channel: string, messageTs: string, app: App) {
     })
 }
 
-export async function handleAuth(slackId: string, channel: string, app: App, messageTs: string) {
+export async function handleAuth(slackId: string, channel: string, app: App, messageTs: string, teamId: string) {
     if (await isUserAuthorized(slackId, channel, app)) {
         return true
     }
+    let reactToUnauthorized = true
     try {
-        await humiliateUser(channel, messageTs, app)
-    } catch (e) {
-        console.error("failed to humiliate user", e)
+        reactToUnauthorized = (await getUserSettings(teamId, slackId)).reactToUnauthorized
+    } catch (error) {
+        if (!isSettingsTableMissing(error)) throw error
+        console.warn("user_settings has not been created; using the default reaction setting")
+    }
+    if (reactToUnauthorized) {
+        try {
+            await humiliateUser(channel, messageTs, app)
+        } catch (e) {
+            console.error("failed to react to unauthorized user", e)
+        }
     }
     return false    
 }
