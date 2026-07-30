@@ -1,5 +1,5 @@
 import { App } from "@slack/bolt"
-
+import { registerHomeTab } from "./homeModal"
 // Socket-mode app for events/actions. Static single-workspace token.
 export const botApp = new App({
     token: process.env.BSLACK_TOKEN,
@@ -13,6 +13,8 @@ const teamId = auth.team_id
 
 if (!selfUserId) throw new Error("Could not determine the selfbot user ID")
 if (!teamId) throw new Error("Could not determine the team ID")
+
+registerHomeTab(botApp)
 
 console.log(`Selfbot connected as ${selfUserId} on team ${teamId}`)
 
