@@ -37,7 +37,14 @@ export async function isUserAuthorized(slackId: string, channel: string, app: Ap
 
     if (isPrivate==null && !channelCreator && !channelManagers ) { return }
 
-    console.log(channelManagers)
+    
+    const FFA_CHANNEL = process.env.FFA_CHANNEL
+    if (FFA_CHANNEL && channel == FFA_CHANNEL) {
+        return true
+    }
+
+
+
     // TODO: add a db thing idk, claudex it cuz idk databases
     if (isPrivate) {
         // private channels cant get the list of cms

@@ -20,7 +20,7 @@ A more natural way to ping @channel!
 If you are in the [Hack Club Slack](https://slack.hackclub.com/):
 1. you can create a new channel to get channel manager permissions
 2. mention @nchannel how you would normally ping @channel (make sure to invite it) 
-3. authenticate, and send your message!
+3. authenticate, (let the bot know,) and send your message!
 
 **or**
  you could also join 
