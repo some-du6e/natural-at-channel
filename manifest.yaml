@@ -10,7 +10,7 @@ features:
     messages_tab_read_only_enabled: true
 
   bot_user:
-    display_name: [DEV] nchannel
+    display_name: [DEV] Nchannel
     always_online: true
 
   unfurl_domains: # change these to whatever cdn ur using
