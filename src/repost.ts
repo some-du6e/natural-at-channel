@@ -1,6 +1,6 @@
 import { botApp, selfUserId, teamId } from "./slack_bot"
 import { installationStore } from "./installationStore"
-import { deleteMessage } from "./usersManager"
+import { deleteMessage, subscribeToThread } from "./usersManager"
 import { handleAuth } from "./permissions"
 
 
@@ -20,6 +20,9 @@ async function getUserToken(userId: string): Promise<string | null> {
         return null
     }
 }
+
+
+
 
 export async function buildOAuthUrl(): Promise<string> {
     const port = process.env.PORT ?? 3000
@@ -207,7 +210,7 @@ export async function repostAsChannelAndDelete(
         }
     }
 
-    await botApp.client.chat.postMessage({
+    let channelmsg = await botApp.client.chat.postMessage({
         channel: channelId,
         text,
         blocks: [
@@ -217,6 +220,21 @@ export async function repostAsChannelAndDelete(
         username,
         icon_url: iconUrl,
     })
+    let channelmsgts = channelmsg.ts
+    if (!channelmsgts) {
+        return { ok: false, error: "failed_to_post_repost" }
+    }
+
+    let auto_sub = true // todo
+    
+    if (auto_sub) {
+        try {
+            await subscribeToThread(userToken, channelmsgts, channelId, botApp)
+        } catch (e) {
+            console.error("subsribing failed", e)
+            return { ok: false, error: `subsribing failed: ${(e as Error).message}` }
+        }
+    }
 
     try {
         await deleteMessage(userToken, messageTs, channelId, botApp)
