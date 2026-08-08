@@ -101,8 +101,13 @@ export async function repostAsChannelAndDelete(
     }
 
     const { user } = await botApp.client.users.info({ user: originalUser })
+    const settings = await getUserSettings(teamId!, userId)
+    const displayName = user?.profile?.display_name
+    const fullName = user?.profile?.real_name
     const username =
-        user?.profile?.display_name || user?.profile?.real_name || user?.name || originalUser
+        (settings.namePreference === "full_name" ? fullName : displayName) ||
+        user?.name ||
+        originalUser
     const iconUrl = user?.profile?.image_192 || user?.profile?.image_72
 
     const text = replaceSelfMention(originalText)
@@ -226,7 +231,6 @@ export async function repostAsChannelAndDelete(
         return { ok: false, error: "failed_to_post_repost" }
     }
 
-    const settings = await getUserSettings(teamId!, userId)
     if (settings.autoSub) {
         try {
             await subscribeToThread(userToken, channelmsgts, channelId, botApp, userId)

@@ -1,6 +1,6 @@
 import type { App } from "@slack/bolt"
 import { installationStore } from "./installationStore"
-import { getUserSettings, isSettingsTableMissing, setReactToUnauthorized, setAutoSub } from "./settings"
+import { getUserSettings, isSettingsTableMissing, setReactToUnauthorized, setAutoSub, setNamePreference } from "./settings"
 
 async function isAccountLinked(teamId: string, userId: string): Promise<boolean> {
     try {
@@ -21,11 +21,14 @@ function oauthUrl(): string {
     return `${base}/slack/install`
 }
 
-async function buildHomeBlocks(teamId: string, userId: string) {
-    const [isLinked, settings] = await Promise.all([
+async function buildHomeBlocks(teamId: string, userId: string, client: any) {
+    const [isLinked, settings, profile] = await Promise.all([
         isAccountLinked(teamId, userId),
         getUserSettings(teamId, userId),
+        client.users.info({ user: userId }).then((r: any) => r.user?.profile).catch(() => null),
     ])
+    const displayName = profile?.display_name || profile?.real_name || profile?.name || "Display name"
+    const fullName = profile?.real_name || profile?.display_name || profile?.name || "Full name"
 
     return [
         {
@@ -111,13 +114,43 @@ async function buildHomeBlocks(teamId: string, userId: string) {
                 ...(settings.autoSub ? { style: "danger" } : { style: "primary" }),
             },
         },
+        { type: "divider" },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: "🏷️ *Preferred name* — choose which name reposts show as.",
+            },
+            accessory: (() => {
+                const options = [
+                    {
+                        text: { type: "plain_text", text: displayName, emoji: true },
+                        value: "display_name",
+                        description: { type: "plain_text", text: "Your display name" },
+                    },
+                    {
+                        text: { type: "plain_text", text: fullName, emoji: true },
+                        value: "full_name",
+                        description: { type: "plain_text", text: "Your full / real name" },
+                    },
+                ]
+                return {
+                    type: "static_select" as const,
+                    placeholder: { type: "plain_text", text: "Select a name", emoji: true },
+                    action_id: "home_name_preference",
+                    initial_option:
+                        settings.namePreference === "full_name" ? options[1] : options[0],
+                    options,
+                }
+            })(),
+        },
     ]
 }
 
 async function refreshHome(client: any, teamId: string, userId: string) {
     await client.views.publish({
         user_id: userId,
-        view: { type: "home", blocks: await buildHomeBlocks(teamId, userId) },
+        view: { type: "home", blocks: await buildHomeBlocks(teamId, userId, client) },
     })
 }
 
@@ -171,6 +204,18 @@ export function registerHomeTab(app: App, teamId: string) {
         const userId = body.user.id
         const enabled = "value" in action && action.value === "on"
         await setAutoSub(teamId, userId, enabled)
+        await refreshHome(client, teamId, userId)
+    })
+
+    app.action("home_name_preference", async ({ ack, body, action, client }) => {
+        await ack()
+        const userId = body.user.id
+        const value =
+            "selected_option" in action &&
+            action.selected_option?.value === "full_name"
+                ? "full_name"
+                : "display_name"
+        await setNamePreference(teamId, userId, value)
         await refreshHome(client, teamId, userId)
     })
 }

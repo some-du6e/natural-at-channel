@@ -1,13 +1,17 @@
 import { supabase } from "./supabase"
 
+export type NamePreference = "display_name" | "full_name"
+
 export type UserSettings = {
     reactToUnauthorized: boolean
     autoSub: boolean
+    namePreference: NamePreference
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
     reactToUnauthorized: true,
     autoSub: true,
+    namePreference: "display_name",
 }
 
 export function isSettingsTableMissing(error: unknown): boolean {
@@ -17,7 +21,7 @@ export function isSettingsTableMissing(error: unknown): boolean {
 export async function getUserSettings(teamId: string, userId: string): Promise<UserSettings> {
     const { data, error } = await supabase
         .from("user_settings")
-        .select("react_to_unauthorized, auto_sub")
+        .select("react_to_unauthorized, auto_sub, name_preference")
         .eq("team_id", teamId)
         .eq("user_id", userId)
         .maybeSingle()
@@ -28,6 +32,7 @@ export async function getUserSettings(teamId: string, userId: string): Promise<U
     return {
         reactToUnauthorized: data.react_to_unauthorized,
         autoSub: data.auto_sub,
+        namePreference: data.name_preference,
     }
 }
 
@@ -54,6 +59,23 @@ export async function setAutoSub(teamId: string, userId: string, enabled: boolea
             team_id: teamId,
             user_id: userId,
             auto_sub: enabled,
+            updated_at: new Date().toISOString(),
+        },
+        { onConflict: "team_id,user_id" },
+    )
+    if (error) throw error
+}
+
+export async function setNamePreference(
+    teamId: string,
+    userId: string,
+    preference: NamePreference,
+): Promise<void> {
+    const { error } = await supabase.from("user_settings").upsert(
+        {
+            team_id: teamId,
+            user_id: userId,
+            name_preference: preference,
             updated_at: new Date().toISOString(),
         },
         { onConflict: "team_id,user_id" },

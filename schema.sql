@@ -24,6 +24,7 @@ create table if not exists public.user_settings (
     user_id text not null,
     react_to_unauthorized boolean not null default true,
     auto_sub boolean not null default true,
+    name_preference text not null default 'display_name' check (name_preference in ('display_name', 'full_name')),
     updated_at timestamptz not null default now(),
     primary key (team_id, user_id)
 );
