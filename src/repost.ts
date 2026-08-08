@@ -2,6 +2,7 @@ import { botApp, selfUserId, teamId } from "./slack_bot"
 import { installationStore } from "./installationStore"
 import { deleteMessage, subscribeToThread } from "./usersManager"
 import { handleAuth } from "./permissions"
+import { getUserSettings } from "./settings"
 
 
 function replaceSelfMention(message: string) {
@@ -225,11 +226,10 @@ export async function repostAsChannelAndDelete(
         return { ok: false, error: "failed_to_post_repost" }
     }
 
-    let auto_sub = true // todo
-    
-    if (auto_sub) {
+    const settings = await getUserSettings(teamId!, userId)
+    if (settings.autoSub) {
         try {
-            await subscribeToThread(userToken, channelmsgts, channelId, botApp)
+            await subscribeToThread(userToken, channelmsgts, channelId, botApp, userId)
         } catch (e) {
             console.error("subsribing failed", e)
             return { ok: false, error: `subsribing failed: ${(e as Error).message}` }

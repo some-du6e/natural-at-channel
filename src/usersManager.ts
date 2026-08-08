@@ -18,9 +18,11 @@ export async function subscribeToThread(
     messageTs: string,
     channelId: string,
     app: App,
+    userId: string,
+
 ) {
     let submessage = app.client.chat.postMessage({
-        text: `automated: cc <@${userToken}>`,
+        text: `automated: SUBSCRIBE <@${userId}>`,
         channel: channelId,
         thread_ts: messageTs,
         token: userToken,

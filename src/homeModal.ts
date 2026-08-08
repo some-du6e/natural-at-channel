@@ -1,6 +1,6 @@
 import type { App } from "@slack/bolt"
 import { installationStore } from "./installationStore"
-import { getUserSettings, isSettingsTableMissing, setReactToUnauthorized } from "./settings"
+import { getUserSettings, isSettingsTableMissing, setReactToUnauthorized, setAutoSub } from "./settings"
 
 async function isAccountLinked(teamId: string, userId: string): Promise<boolean> {
     try {
@@ -90,6 +90,27 @@ async function buildHomeBlocks(teamId: string, userId: string) {
                 ...(settings.reactToUnauthorized ? { style: "danger" } : { style: "primary" }),
             },
         },
+        { type: "divider" },
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: settings.autoSub
+                    ? "🟢 *Auto-subscribe on* — you'll be subscribed to threads when your message gets reposted."
+                    : "🔴 *Auto-subscribe off* — you won't be subscribed to repost threads.",
+            },
+            accessory: {
+                type: "button",
+                text: {
+                    type: "plain_text",
+                    text: settings.autoSub ? "Turn off" : "Turn on",
+                    emoji: true,
+                },
+                action_id: "home_toggle_autosub",
+                value: settings.autoSub ? "off" : "on",
+                ...(settings.autoSub ? { style: "danger" } : { style: "primary" }),
+            },
+        },
     ]
 }
 
@@ -142,6 +163,14 @@ export function registerHomeTab(app: App, teamId: string) {
         const userId = body.user.id
         const enabled = "value" in action && action.value === "on"
         await setReactToUnauthorized(teamId, userId, enabled)
+        await refreshHome(client, teamId, userId)
+    })
+
+    app.action("home_toggle_autosub", async ({ ack, body, action, client }) => {
+        await ack()
+        const userId = body.user.id
+        const enabled = "value" in action && action.value === "on"
+        await setAutoSub(teamId, userId, enabled)
         await refreshHome(client, teamId, userId)
     })
 }

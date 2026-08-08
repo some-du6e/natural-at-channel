@@ -23,6 +23,7 @@ create table if not exists public.user_settings (
     team_id text not null,
     user_id text not null,
     react_to_unauthorized boolean not null default true,
+    auto_sub boolean not null default true,
     updated_at timestamptz not null default now(),
     primary key (team_id, user_id)
 );
