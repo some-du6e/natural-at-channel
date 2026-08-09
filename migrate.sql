@@ -1,6 +1,6 @@
 -- migrate.sql — bring an old self-hosted database up to the current schema.
 --
--- If you've been running Nchannel since an early version, run this in your
+-- If you've been running nChannel since an early version, run this in your
 -- Supabase SQL editor. Every statement is idempotent, so it's safe to run
 -- repeatedly and safe to run against a fresh db too (it just becomes a no-op
 -- alongside schema.sql). It covers everything that's been added over time:

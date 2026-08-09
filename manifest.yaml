@@ -1,5 +1,5 @@
 display_information:
-  name: [DEV] nchannel
+  name: [DEV] nChannel
   background_color: "#ff00ff"
 
 
@@ -10,7 +10,7 @@ features:
     messages_tab_read_only_enabled: true
 
   bot_user:
-    display_name: [DEV] Nchannel
+    display_name: [DEV] nChannel
     always_online: true
 
   unfurl_domains: # change these to whatever cdn ur using

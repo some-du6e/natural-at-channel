@@ -33,7 +33,7 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
     return [
         {
             type: "header",
-            text: { type: "plain_text", text: "Nchannel", emoji: true },
+            text: { type: "plain_text", text: "nChannel", emoji: true },
         },
         {
             type: "context",
@@ -55,7 +55,7 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
                 type: "mrkdwn",
                 text: isLinked
                     ? "*Connected*\nNchannel can ping the whole channel for you."
-                    : "*Not connected*\nConnect your Slack account to start using Nchannel.",
+                    : "*Not connected*\nConnect your Slack account to start using nChannel.",
             },
             accessory: isLinked
                 ? {
@@ -64,8 +64,8 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
                     action_id: "home_revoke",
                     style: "danger",
                     confirm: {
-                        title: { type: "plain_text", text: "Disconnect Nchannel?" },
-                        text: { type: "mrkdwn", text: "Nchannel won’t be able to ping the whole channel for you until you connect again." },
+                        title: { type: "plain_text", text: "Disconnect nChannel?" },
+                        text: { type: "mrkdwn", text: "nChannel won’t be able to ping the whole channel for you until you connect again." },
                         confirm: { type: "plain_text", text: "Disconnect" },
                         deny: { type: "plain_text", text: "Keep connected" },
                     },
@@ -81,15 +81,15 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
         { type: "divider" },
         {
             type: "header",
-            text: { type: "plain_text", text: "Nchannel behavior", emoji: true },
+            text: { type: "plain_text", text: "nChannel behavior", emoji: true },
         },
         {
             type: "section",
             text: {
                 type: "mrkdwn",
                 text: settings.reactToUnauthorized
-                    ? "*On* — Nchannel *will* ridicule you when you use it without permission."
-                    : "*Off* — Nchannel won’t ridicule you when you use it without permission.",
+                    ? "*On* — nChannel *will* ridicule you when you use it without permission."
+                    : "*Off* — nChannel won’t ridicule you when you use it without permission.",
             },
             accessory: {
                 type: "button",
@@ -130,7 +130,7 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
             type: "section",
             text: {
                 type: "mrkdwn",
-                text: "*Name on reposts*\nChoose whether Nchannel uses your display name or full name.",
+                text: "*Name on reposts*\nChoose whether nChannel uses your display name or full name.",
             },
             accessory: (() => {
                 const options = [
@@ -178,13 +178,13 @@ export function registerHomeTab(app: App, teamId: string) {
                     blocks: [
                         {
                             type: "header",
-                            text: { type: "plain_text", text: "Nchannel", emoji: true },
+                            text: { type: "plain_text", text: "nChannel", emoji: true },
                         },
                         {
                             type: "section",
                             text: {
                                 type: "mrkdwn",
-                                text: "Nchannel couldn’t load your settings. Run the latest `schema.sql` in Supabase, then reopen this tab.",
+                                text: "nChannel couldn’t load your settings. Run the latest `schema.sql` in Supabase, then reopen this tab.",
                             },
                         },
                     ],
