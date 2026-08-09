@@ -10,6 +10,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@sentry/bun": "^10.69.0",
     "@slack/bolt": "^4",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8"

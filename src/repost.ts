@@ -3,6 +3,7 @@ import { installationStore } from "./installationStore"
 import { deleteMessage, subscribeToThread } from "./usersManager"
 import { handleAuth } from "./permissions"
 import { getUserSettings } from "./settings"
+import { errorMessage, handleError } from "./errors"
 
 function replaceSelfMention(message: string) {
     return message.replaceAll(`<@${selfUserId}>`, "<!channel>")
@@ -16,7 +17,10 @@ async function getUserToken(userId: string): Promise<string | null> {
             isEnterpriseInstall: false,
         })
         return installation.user?.token ?? null
-    } catch {
+    } catch (error) {
+        if (!(error instanceof Error && error.message === "Installation not found")) {
+            throw error
+        }
         return null
     }
 }
@@ -208,6 +212,7 @@ export async function repostAsChannelAndDelete(
                 }
             } catch (e) {
                 console.error(`failed to re-host ${file.id}`, e)
+                handleError(e)
             }
         }
     }
@@ -236,15 +241,16 @@ export async function repostAsChannelAndDelete(
             await subscribeToThread(userToken, channelmsgts, channelId, botApp, userId)
         } catch (e) {
             console.error("subsribing failed", e)
-            return { ok: false, error: `subsribing failed: ${(e as Error).message}` }
+            handleError(e)
+            return { ok: false, error: `subsribing failed: ${errorMessage(e)}` }
         }
     }
 
     try {
         await deleteMessage(userToken, messageTs, channelId, botApp)
     } catch (e) {
-        console.error("chat.delete failed", e)
-        return { ok: false, error: `delete_failed: ${(e as Error).message}` }
+        handleError(e)
+        return { ok: false, error: `delete_failed: ${errorMessage(e)}` }
     }
 
     return { ok: true }

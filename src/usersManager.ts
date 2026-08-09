@@ -34,6 +34,5 @@ export async function subscribeToThread(
         throw new Error("Failed to subscribe to thread")
     }
     
-    deleteMessage(userToken, submessagets, channelId, app)
+    await deleteMessage(userToken, submessagets, channelId, app)
 }
-

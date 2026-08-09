@@ -1,6 +1,7 @@
 import type { App } from "@slack/bolt"
 import { installationStore } from "./installationStore"
 import { getUserSettings, isSettingsTableMissing, setReactToUnauthorized, setAutoSub, setNamePreference } from "./settings"
+import { handleError } from "./errors"
 
 async function isAccountLinked(teamId: string, userId: string): Promise<boolean> {
     try {
@@ -10,8 +11,9 @@ async function isAccountLinked(teamId: string, userId: string): Promise<boolean>
             isEnterpriseInstall: false,
         })
         return true
-    } catch {
-        return false
+    } catch (error) {
+        if (error instanceof Error && error.message === "Installation not found") return false
+        throw error
     }
 }
 
@@ -25,7 +27,10 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
     const [isLinked, settings, profile] = await Promise.all([
         isAccountLinked(teamId, userId),
         getUserSettings(teamId, userId),
-        client.users.info({ user: userId }).then((r: any) => r.user?.profile).catch(() => null),
+        client.users.info({ user: userId }).then((r: any) => r.user?.profile).catch((error: unknown) => {
+            handleError(error)
+            return null
+        }),
     ])
     const displayName = profile?.display_name || profile?.real_name || profile?.name || "Display name"
     const fullName = profile?.real_name || profile?.display_name || profile?.name || "Full name"
@@ -170,63 +175,92 @@ export function registerHomeTab(app: App, teamId: string) {
         try {
             await refreshHome(client, teamId, event.user)
         } catch (error) {
-            if (!isSettingsTableMissing(error)) throw error
-            await client.views.publish({
-                user_id: event.user,
-                view: {
-                    type: "home",
-                    blocks: [
-                        {
-                            type: "header",
-                            text: { type: "plain_text", text: "nChannel", emoji: true },
-                        },
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: "nChannel couldn’t load your settings. Run the latest `schema.sql` in Supabase, then reopen this tab.",
+            if (!isSettingsTableMissing(error)) {
+                handleError(error)
+                return
+            }
+            try {
+                await client.views.publish({
+                    user_id: event.user,
+                    view: {
+                        type: "home",
+                        blocks: [
+                            {
+                                type: "header",
+                                text: { type: "plain_text", text: "nChannel", emoji: true },
                             },
-                        },
-                    ],
-                },
-            })
+                            {
+                                type: "section",
+                                text: {
+                                    type: "mrkdwn",
+                                    text: "nChannel couldn’t load your settings. Run the latest `schema.sql` in Supabase, then reopen this tab.",
+                                },
+                            },
+                        ],
+                    },
+                })
+            } catch (fallbackError) {
+                handleError(fallbackError)
+            }
         }
     })
 
-    app.action("home_authorize", async ({ ack }) => await ack())
+    app.action("home_authorize", async ({ ack }) => {
+        try {
+            await ack()
+        } catch (error) {
+            handleError(error)
+        }
+    })
 
     app.action("home_revoke", async ({ ack, body, client }) => {
-        await ack()
-        const userId = body.user.id
-        await installationStore.deleteInstallation({ teamId, userId, isEnterpriseInstall: false })
-        await refreshHome(client, teamId, userId)
+        try {
+            await ack()
+            const userId = body.user.id
+            await installationStore.deleteInstallation({ teamId, userId, isEnterpriseInstall: false })
+            await refreshHome(client, teamId, userId)
+        } catch (error) {
+            handleError(error)
+        }
     })
 
     app.action("home_toggle_loll", async ({ ack, body, action, client }) => {
-        await ack()
-        const userId = body.user.id
-        const enabled = "value" in action && action.value === "on"
-        await setReactToUnauthorized(teamId, userId, enabled)
-        await refreshHome(client, teamId, userId)
+        try {
+            await ack()
+            const userId = body.user.id
+            const enabled = "value" in action && action.value === "on"
+            await setReactToUnauthorized(teamId, userId, enabled)
+            await refreshHome(client, teamId, userId)
+        } catch (error) {
+            handleError(error)
+        }
     })
 
     app.action("home_toggle_autosub", async ({ ack, body, action, client }) => {
-        await ack()
-        const userId = body.user.id
-        const enabled = "value" in action && action.value === "on"
-        await setAutoSub(teamId, userId, enabled)
-        await refreshHome(client, teamId, userId)
+        try {
+            await ack()
+            const userId = body.user.id
+            const enabled = "value" in action && action.value === "on"
+            await setAutoSub(teamId, userId, enabled)
+            await refreshHome(client, teamId, userId)
+        } catch (error) {
+            handleError(error)
+        }
     })
 
     app.action("home_name_preference", async ({ ack, body, action, client }) => {
-        await ack()
-        const userId = body.user.id
-        const value =
-            "selected_option" in action &&
-            action.selected_option?.value === "full_name"
-                ? "full_name"
-                : "display_name"
-        await setNamePreference(teamId, userId, value)
-        await refreshHome(client, teamId, userId)
+        try {
+            await ack()
+            const userId = body.user.id
+            const value =
+                "selected_option" in action &&
+                action.selected_option?.value === "full_name"
+                    ? "full_name"
+                    : "display_name"
+            await setNamePreference(teamId, userId, value)
+            await refreshHome(client, teamId, userId)
+        } catch (error) {
+            handleError(error)
+        }
     })
 }

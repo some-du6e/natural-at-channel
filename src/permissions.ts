@@ -1,5 +1,6 @@
 import { App } from "@slack/bolt";
 import { getUserSettings, isSettingsTableMissing } from "./settings";
+import { handleError } from "./errors";
 
 async function getChannelManagers(channelId: string): Promise<string[]> { // src: https://github.com/skyfallwastaken/at-channel/blob/d7f003954e0486c1182f01ac383bad503a7481ac/src/util.ts#L48-L68
   const formData = new FormData();
@@ -91,7 +92,7 @@ export async function handleAuth(slackId: string, channel: string, app: App, mes
         try {
             await humiliateUser(channel, messageTs, app)
         } catch (e) {
-            console.error("failed to react to unauthorized user", e)
+            handleError(e)
         }
     }
     return false    
