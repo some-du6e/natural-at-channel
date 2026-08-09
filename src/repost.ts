@@ -4,7 +4,6 @@ import { deleteMessage, subscribeToThread } from "./usersManager"
 import { handleAuth } from "./permissions"
 import { getUserSettings } from "./settings"
 
-
 function replaceSelfMention(message: string) {
     return message.replaceAll(`<@${selfUserId}>`, "<!channel>")
 }
@@ -21,9 +20,6 @@ async function getUserToken(userId: string): Promise<string | null> {
         return null
     }
 }
-
-
-
 
 export async function buildOAuthUrl(): Promise<string> {
     const port = process.env.PORT ?? 3000
@@ -219,12 +215,16 @@ export async function repostAsChannelAndDelete(
     let channelmsg = await botApp.client.chat.postMessage({
         channel: channelId,
         text,
-        blocks: [
-            { type: "section", text: { type: "mrkdwn", text } },
-            ...attachmentBlocks,
-        ],
+        blocks: [{ type: "section", text: { type: "mrkdwn", text } }, ...attachmentBlocks],
         username,
         icon_url: iconUrl,
+        metadata: {
+            // i saw this pr (to at-channel) in jeremy's channel so is thought id add it 
+            // (for taut compat or idk what jeremy is gonna do with that)
+            // it also might save my ass from fd perchance bc im alr in trouble :thumbs-up:
+            event_type: "at_channel_message",
+            event_payload: { source_user_id: userId },
+        },
     })
     let channelmsgts = channelmsg.ts
     if (!channelmsgts) {
