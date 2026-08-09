@@ -54,7 +54,7 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
             text: {
                 type: "mrkdwn",
                 text: isLinked
-                    ? "*Connected*\nNchannel can ping the whole channel for you."
+                    ? "*Connected*\nnChannel can ping the whole channel for you."
                     : "*Not connected*\nConnect your Slack account to start using nChannel.",
             },
             accessory: isLinked
@@ -137,12 +137,12 @@ async function buildHomeBlocks(teamId: string, userId: string, client: any) {
                     {
                         text: { type: "plain_text", text: displayName, emoji: true },
                         value: "display_name",
-                        description: { type: "plain_text", text: "The name on your Slack profile" },
+                        description: { type: "plain_text", text: "Display name" },
                     },
                     {
                         text: { type: "plain_text", text: fullName, emoji: true },
                         value: "full_name",
-                        description: { type: "plain_text", text: "Your full name" },
+                        description: { type: "plain_text", text: "Full name" },
                     },
                 ]
                 return {
