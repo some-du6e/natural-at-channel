@@ -1,6 +1,7 @@
 import { botApp, selfUserId } from "./slack_bot"
 import { repostAsChannelAndDelete, sendAuthPrompt } from "./repost"
 import { handleError } from "./errors"
+import { handleAccidentalPing } from "./accidents"
 
 const UNAUTHORIZED_MESSAGE = "yeah buddy ur not channel manager nor channel creator byebye"
 
@@ -10,6 +11,11 @@ botApp.event("app_mention", async ({ event }) => {
     if (!event.text.includes(`<@${selfUserId}>`)) return
 
     console.log(event)
+
+    // If the ping looks accidental (just `@bot`, nothing else), whisper a
+    // confirmation prompt instead of @channel-ing right away. When we
+    // whispered, the buttons drive the repost — skip the automatic one.
+    if (await handleAccidentalPing(event, botApp)) return
 
     try {
         const result = await repostAsChannelAndDelete(event.channel, event.ts, event.user)
@@ -96,5 +102,14 @@ botApp.action("retry_repost", async ({ ack, body, respond }) => {
         } catch (respondError) {
             handleError(respondError)
         }
+    }
+})
+
+botApp.action("accident_ignore", async ({ ack, respond }) => {
+    try {
+        await ack()
+        await respond({ delete_original: true, response_type: "ephemeral", text: "" })
+    } catch (error) {
+        handleError(error)
     }
 })
